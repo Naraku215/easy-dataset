@@ -315,6 +315,13 @@ export default function AdvancedChunkDialog({ open, onClose, projectId, fileId, 
               />
             </Box>
 
+            {/* 文档段落长度参考 */}
+            {stats && stats.minSectionSize != null && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.6 }}>
+                {t('textSplit.sectionLengthRef')}：{t('settings.minLength')} {stats.minSectionSize} | {t('textSplit.medianLength')} {stats.medianSectionSize} | {t('settings.maxLength')} {stats.maxSectionSize}
+              </Typography>
+            )}
+
             <FormControlLabel
               control={
                 <Switch
@@ -468,7 +475,8 @@ function _scoreLengthAdequacy(len, minLength, maxLength) {
 
 function _scoreHeadingPresence(content, headings) {
   if (/^\s*#{1,6}\s+/.test(content)) return 15;
-  if (headings && headings.length > 0) return 10;
+  const hasBlockquoteHeading = /^\s*> 所属章节：/.test(content);
+  if ((headings && headings.length > 0) || hasBlockquoteHeading) return 10;
   if (/^#{1,6}\s+/m.test(content)) return 8;
   return 0;
 }

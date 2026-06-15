@@ -416,6 +416,8 @@
     "chunksPreview": "Pré-visualização do Tamanho dos Blocos",
     "chunk": "Bloco de Texto",
     "characters": "caracteres",
+        "sectionLengthRef": "Referência de tamanho de seção",
+        "medianLength": "Mediana",
     "questionsGeneratedSuccess": "{{total}} perguntas geradas com sucesso para o bloco de texto",
     "generateQuestionsForChunkFailed": "Falha ao gerar perguntas para o bloco de texto {{chunkId}}",
     "generateQuestionsForChunkError": "Erro ao gerar perguntas para o bloco de texto {{chunkId}}",

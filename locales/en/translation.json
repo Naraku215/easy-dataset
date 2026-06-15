@@ -445,6 +445,8 @@
     "advancedSplitQualityScore": "Quality",
     "advancedSplitParams": "Parameters",
     "advancedSplitNoChunks": "Click \"Preview Chunks\" to see results",
+        "sectionLengthRef": "Section length reference",
+        "medianLength": "Median",
     "expand": "Expand",
     "collapse": "Collapse",
     "editChunkInline": "Edit content",

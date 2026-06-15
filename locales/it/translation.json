@@ -435,6 +435,8 @@
     "chunksPreview": "Anteprima dimensione blocco",
     "chunk": "Bloccare",
     "characters": "carattere",
+        "sectionLengthRef": "Riferimento lunghezza sezione",
+        "medianLength": "Mediana",
     "questionsGeneratedSuccess": "Domanda {{total}} generata correttamente per il blocco di testo",
     "generateQuestionsForChunkFailed": "Impossibile generare una domanda per il blocco PLACEholder0}",
     "generateQuestionsForChunkError": "Errore durante la generazione della domanda per il blocco PLACEholder0}",

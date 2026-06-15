@@ -442,6 +442,8 @@
     "advancedSplitQualityScore": "质量分",
     "advancedSplitParams": "分块参数",
     "advancedSplitNoChunks": "点击「预览分块」查看分块结果",
+        "sectionLengthRef": "文档段落长度参考",
+        "medianLength": "中位",
     "expand": "展开全文",
     "collapse": "收起",
     "editChunkInline": "编辑内容",
