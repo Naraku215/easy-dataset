@@ -35,7 +35,10 @@ export async function POST(request, { params }) {
         fileName,
         content: chunk.content,
         summary: chunk.summary || `${fileName} Part ${index + 1}`,
-        size: chunk.content.length
+        size: chunk.content.length,
+        headingPath: chunk.headingPath && chunk.headingPath.length > 0
+          ? JSON.stringify(chunk.headingPath)
+          : ''
       };
     });
 

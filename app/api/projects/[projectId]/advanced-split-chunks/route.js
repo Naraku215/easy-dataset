@@ -25,14 +25,23 @@ export async function GET(request, { params }) {
     }
 
     // 转为前端需要的格式
-    const formattedChunks = chunks.map(chunk => ({
-      id: chunk.id,
-      content: chunk.content,
-      summary: chunk.summary || '',
-      size: chunk.size || chunk.content.length,
-      qualityScore: null, // 已保存的分块不重新评分
-      headings: []
-    }));
+    const formattedChunks = chunks.map(chunk => {
+      let headingPath = [];
+      try {
+        headingPath = chunk.headingPath ? JSON.parse(chunk.headingPath) : [];
+      } catch (e) {
+        headingPath = [];
+      }
+      return {
+        id: chunk.id,
+        content: chunk.content,
+        summary: chunk.summary || '',
+        size: chunk.size || chunk.content.length,
+        qualityScore: null, // 已保存的分块不重新评分
+        headings: headingPath,  // 用完整路径支持大纲树跳转
+        headingPath
+      };
+    });
 
     return NextResponse.json({
       success: true,

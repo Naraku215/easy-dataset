@@ -104,16 +104,29 @@ export default function ChunkPreviewList({
     return [...new Set(merged)];
   };
 
+  // 清理自动生成的上下文标记（合并时去除残留）
+  const stripAutoContext = (content) => {
+    if (!content) return content;
+    return content
+      .replace(/^> 所属章节：[^\n]*(?:\n|$)/gm, '')
+      .replace(/^[^\n]*（续 \d+\/\d+）[^\n]*(?:\n|$)/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
+
   const mergeUp = (index) => {
     if (!onChunksChange || index === 0) return;
     const merged = [...chunks];
     const target = merged[index - 1];
     const source = merged[index];
+    const cleanTarget = stripAutoContext(target.content);
+    const cleanSource = stripAutoContext(source.content);
     merged[index - 1] = {
       ...target,
-      content: target.content + '\n\n' + source.content,
-      size: target.content.length + source.content.length + 2,
-      headings: dedupeHeadings(target.headings, source.headings)
+      content: cleanTarget + '\n\n' + cleanSource,
+      size: cleanTarget.length + cleanSource.length + 2,
+      headings: dedupeHeadings(target.headings, source.headings),
+      headingPath: dedupeHeadings(target.headingPath, source.headingPath)
     };
     merged.splice(index, 1);
     onChunksChange(merged);
@@ -124,11 +137,14 @@ export default function ChunkPreviewList({
     const merged = [...chunks];
     const target = merged[index];
     const source = merged[index + 1];
+    const cleanTarget = stripAutoContext(target.content);
+    const cleanSource = stripAutoContext(source.content);
     merged[index] = {
       ...target,
-      content: target.content + '\n\n' + source.content,
-      size: target.content.length + source.content.length + 2,
-      headings: dedupeHeadings(target.headings, source.headings)
+      content: cleanTarget + '\n\n' + cleanSource,
+      size: cleanTarget.length + cleanSource.length + 2,
+      headings: dedupeHeadings(target.headings, source.headings),
+      headingPath: dedupeHeadings(target.headingPath, source.headingPath)
     };
     merged.splice(index + 1, 1);
     onChunksChange(merged);
@@ -183,19 +199,32 @@ export default function ChunkPreviewList({
     const headings1 = extractHeadingsFromContent(firstPart);
     const headings2 = extractHeadingsFromContent(secondPart);
 
+    // 后半部分若无标题行且无已有引用上下文，自动补全标题上下文
+    let secondContent = secondPart;
+    const secondHasHeading = /^\s*#{1,6}\s+/.test(secondPart.trimStart());
+    const secondHasContext = /^\s*> 所属章节：/.test(secondPart.trimStart());
+    const pathArr = chunk.headingPath || [];
+
+    if (!secondHasHeading && !secondHasContext && pathArr.length > 0) {
+      const pathStr = pathArr.join(' › ');
+      secondContent = `> 所属章节：${pathStr}\n\n${secondPart}`;
+    }
+
     const newChunks = [...chunks];
     newChunks.splice(chunkIndex, 1,
       {
         ...chunk,
         content: firstPart,
         size: firstPart.length,
-        headings: headings1.length > 0 ? headings1 : chunk.headings
+        headings: headings1.length > 0 ? headings1 : chunk.headings,
+        headingPath: pathArr.length > 0 ? pathArr : chunk.headingPath
       },
       {
         ...chunk,
-        content: secondPart,
-        size: secondPart.length,
-        headings: headings2.length > 0 ? headings2 : chunk.headings
+        content: secondContent,
+        size: secondContent.length,
+        headings: headings2.length > 0 ? headings2 : chunk.headings,
+        headingPath: pathArr.length > 0 ? pathArr : chunk.headingPath
       }
     );
 
@@ -208,6 +237,7 @@ export default function ChunkPreviewList({
       {chunks.map((chunk, index) => {
         const isExpanded = expandedSet.has(index);
         const isEditing = editingIndex === index;
+        const isSplitting = splittingIndex === index;
         const isActive = activeChunkIndex === index;
 
         return (

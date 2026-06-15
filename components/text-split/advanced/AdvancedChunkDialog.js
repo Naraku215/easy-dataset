@@ -155,7 +155,7 @@ export default function AdvancedChunkDialog({ open, onClose, projectId, fileId, 
         ...c,
         size: c.content.length,
         qualityScore: scoreChunkClient(c.content, newHeadings, config.minLength, config.maxLength),
-        summary: regenerateSummary(c.content, newHeadings)
+        summary: regenerateSummary(c.content, newHeadings, c.headingPath)
       };
     });
     setChunks(rescored);
@@ -437,7 +437,10 @@ function StatItem({ label, value, onClick }) {
  * @param {string[]} headings - 标题数组
  * @returns {string}
  */
-function regenerateSummary(content, headings) {
+function regenerateSummary(content, headings, headingPath) {
+  if (headingPath && headingPath.length > 0) {
+    return headingPath.join(' › ');
+  }
   if (headings && headings.length > 0) {
     return headings.join(' > ');
   }
