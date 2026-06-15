@@ -469,6 +469,8 @@ function _scoreLengthAdequacy(len, minLength, maxLength) {
 function _scoreHeadingPresence(content, headings) {
   if (/^\s*#{1,6}\s+/.test(content)) return 15;
   if (headings && headings.length > 0) return 10;
+  // 引用格式章节标记（拆分块补全标题上下文时添加）
+  if (/^\s*>\s*所属章节：/.test(content)) return 10;
   if (/^#{1,6}\s+/m.test(content)) return 8;
   return 0;
 }
