@@ -431,8 +431,6 @@
     "chunksPreview": "Blok Boyutu Önizlemesi",
     "chunk": "Blok",
     "characters": " karakter",
-        "sectionLengthRef": "Bölüm uzunluk referansı",
-        "medianLength": "Medyan",
     "questionsGeneratedSuccess": "Metin bloğu için başarıyla {{total}} soru üretildi",
     "generateQuestionsForChunkFailed": "{{chunkId}} bloğu için soru üretilemedi",
     "generateQuestionsForChunkError": "{{chunkId}} bloğu için soru üretilirken hata",
