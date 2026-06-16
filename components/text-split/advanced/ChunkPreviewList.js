@@ -37,6 +37,12 @@ function getScoreColor(score) {
  * @param {string} content
  * @returns {string[]}
  */
+function hasUnbalancedHtmlTable(content) {
+  const openCount = (content.match(/<table\b[^>]*>/gi) || []).length;
+  const closeCount = (content.match(/<\/table\s*>/gi) || []).length;
+  return openCount !== closeCount;
+}
+
 function detectAtomicIssues(content) {
   if (!content) return [];
   const issues = [];
@@ -46,6 +52,9 @@ function detectAtomicIssues(content) {
   }
   if ((content.match(/\$\$/g) || []).length % 2 !== 0) {
     issues.push('textSplit.atomicIssueUnclosedMath');
+  }
+  if (hasUnbalancedHtmlTable(content)) {
+    issues.push('textSplit.atomicIssueUnclosedHtmlTable');
   }
   const tableRows = content.match(/^\|.*\|$/gm);
   if (tableRows && tableRows.length > 1) {

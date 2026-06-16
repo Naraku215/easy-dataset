@@ -436,6 +436,7 @@
     "atomicIssueUnclosedCode": "Unclosed code block",
     "atomicIssueUnclosedMath": "Unclosed math block",
     "atomicIssueIncompleteTable": "Table missing separator",
+    "atomicIssueUnclosedHtmlTable": "Unclosed HTML table",
     "chunksPreview": "Anteprima dimensione blocco",
     "chunk": "Bloccare",
     "characters": "carattere",

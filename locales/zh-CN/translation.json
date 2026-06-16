@@ -454,6 +454,7 @@
     "atomicIssueUnclosedCode": "代码块未闭合",
     "atomicIssueUnclosedMath": "数学公式块未闭合",
     "atomicIssueIncompleteTable": "表格缺少分隔行",
+    "atomicIssueUnclosedHtmlTable": "HTML表格未闭合",
     "missingRequiredData": "缺少必要的数据",
     "chunksPreview": "分块字数预览",
     "chunk": "文本块",

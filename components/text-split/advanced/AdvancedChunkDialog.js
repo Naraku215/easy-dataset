@@ -504,12 +504,19 @@ function _scoreSentenceCompleteness(content) {
   return Math.min(25, Math.max(0, score));
 }
 
+function _hasUnbalancedHtmlTable(content) {
+  const openCount = (content.match(/<table\b[^>]*>/gi) || []).length;
+  const closeCount = (content.match(/<\/table\s*>/gi) || []).length;
+  return openCount !== closeCount;
+}
+
 function _scoreAtomicIntegrity(content) {
   let score = 20;
   const fenceMatches = content.match(/^(`{3,}|~{3,})/gm);
   if (fenceMatches && fenceMatches.length % 2 !== 0) score -= 10;
   const ddCount = (content.match(/\$\$/g) || []).length;
   if (ddCount % 2 !== 0) score -= 10;
+  if (_hasUnbalancedHtmlTable(content)) score -= 10;
   const tableRows = content.match(/^\|.*\|$/gm);
   if (tableRows && tableRows.length > 0) {
     const hasSep = tableRows.some(r => /^\|[\s\-:|]+\|$/.test(r));
