@@ -456,36 +456,52 @@ function regenerateSummary(content, headings, headingPath) {
 
 function _scoreLengthAdequacy(len, minLength, maxLength) {
   if (len === 0) return 0;
-  const midpoint = (minLength + maxLength) / 2;
-  const halfRange = (maxLength - minLength) / 2;
   if (len >= minLength && len <= maxLength) {
-    const distFromMid = Math.abs(len - midpoint);
-    return 20 + (1 - distFromMid / halfRange) * 10;
+    const segWidth = (maxLength - minLength) / 5;
+    const segIndex = Math.min(4, Math.floor((len - minLength) / segWidth));
+    switch (segIndex) {
+      case 2: return 20;
+      case 1: case 3: return 18;
+      case 0: case 4: return 15;
+      default: return 15;
+    }
   }
-  if (len < minLength) return (len / minLength) * 20;
-  return (maxLength / len) * 20;
+  if (len < minLength) return (len / minLength) * 15;
+  return (maxLength / len) * 15;
 }
 
 function _scoreHeadingPresence(content, headings) {
-  if (/^\s*#{1,6}\s+/.test(content)) return 15;
-  if (headings && headings.length > 0) return 10;
+  if (/^\s*#{1,6}\s+/.test(content)) return 20;
+  if (headings && headings.length > 0) return 15;
   // 引用格式章节标记（拆分块补全标题上下文时添加）
-  if (/^\s*>\s*所属章节：/.test(content)) return 10;
-  if (/^#{1,6}\s+/m.test(content)) return 8;
+  if (/^\s*>\s*所属章节：/.test(content)) return 15;
+  if (/^#{1,6}\s+/m.test(content)) return 12;
   return 0;
 }
 
 function _scoreSentenceCompleteness(content) {
   const trimmed = content.trim();
   if (!trimmed) return 0;
-  let score = 10;
+  let score = 12;
   const last = trimmed[trimmed.length - 1];
   if ('.!?。！？'.includes(last)) score += 5;
   if (trimmed.endsWith('```')) score += 5;
-  if (/[.!?。！？）\)」』\]】]$/.test(trimmed)) score += 5;
+  // 原子块结尾识别
+  const endsWithHtmlClose = /<\/[a-zA-Z][a-zA-Z0-9]*\s*>\s*$/.test(trimmed);
+  if (endsWithHtmlClose) score += 5;
+  const endsWithDisplayMath = /\$\$\s*$/.test(trimmed);
+  if (endsWithDisplayMath) score += 5;
+  const lastLine = trimmed.split('\n').pop().trim();
+  const endsWithTableRow = /^\|.+\|$/.test(lastLine);
+  if (endsWithTableRow) score += 5;
+  // 完整标点结尾（含语义等价的原子块结尾）
+  if (/[.!?。！？）\)」』\]】]$/.test(trimmed) || endsWithHtmlClose || endsWithDisplayMath || endsWithTableRow) score += 5;
+  // 连接词/指代词开头
   const firstWord = trimmed.split(/\s+/)[0].toLowerCase();
-  if (['and', 'but', 'however', 'therefore', 'moreover', 'furthermore', 'thus'].includes(firstWord)) score -= 3;
-  return Math.min(20, Math.max(0, score));
+  const englishConnectives = ['and', 'but', 'however', 'therefore', 'moreover', 'furthermore', 'thus'];
+  const chineseConnectives = ['上述', '前述', '上列', '前者', '如下', '下列', '以下', '该', '此', '这些', '此项', '此法', '此外', '另外', '因而', '故', '进而', '继而', '其中', '后者', '见表', '参见', '详见', '见下文', '见下表'];
+  if (englishConnectives.includes(firstWord) || chineseConnectives.some(w => trimmed.startsWith(w))) score -= 3;
+  return Math.min(25, Math.max(0, score));
 }
 
 function _scoreAtomicIntegrity(content) {
@@ -512,7 +528,7 @@ function _scoreContentVariety(content) {
     .replace(/^\|.*\|$/gm, '').replace(/\$\$[\s\S]*?\$\$/g, '')
     .replace(/```[\s\S]*?```/g, '').replace(/^\s*[-*+\d.]\s+.*/gm, '')
     .replace(/^#{1,6}\s+.*/gm, '').trim();
-  if (plain.length > 100) score += 2;
+  if (plain.length > 100) score += 5;
   return Math.min(15, score);
 }
 

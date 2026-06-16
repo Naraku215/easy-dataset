@@ -21,6 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VerticalAlignTopIcon from '@mui/icons-material/VerticalAlignTop';
 import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import 'github-markdown-css/github-markdown-light.css';
@@ -29,6 +30,31 @@ function getScoreColor(score) {
   if (score >= 80) return 'success';
   if (score >= 60) return 'warning';
   return 'error';
+}
+
+/**
+ * 检测原子块完整性问题，返回 i18n key 数组
+ * @param {string} content
+ * @returns {string[]}
+ */
+function detectAtomicIssues(content) {
+  if (!content) return [];
+  const issues = [];
+  const fences = content.match(/^(`{3,}|~{3,})/gm);
+  if (fences && fences.length % 2 !== 0) {
+    issues.push('textSplit.atomicIssueUnclosedCode');
+  }
+  if ((content.match(/\$\$/g) || []).length % 2 !== 0) {
+    issues.push('textSplit.atomicIssueUnclosedMath');
+  }
+  const tableRows = content.match(/^\|.*\|$/gm);
+  if (tableRows && tableRows.length > 1) {
+    const hasSep = tableRows.some(r => /^\|[\s\-:|]+\|$/.test(r));
+    if (!hasSep) {
+      issues.push('textSplit.atomicIssueIncompleteTable');
+    }
+  }
+  return issues;
 }
 
 /**
@@ -268,6 +294,23 @@ export default function ChunkPreviewList({
                   variant="filled"
                 />
               )}
+              {/* 原子块完整性警告 */}
+              {(() => {
+                const issues = detectAtomicIssues(chunk.content);
+                if (issues.length === 0) return null;
+                return (
+                  <Tooltip title={issues.map(key => t(key)).join('；')}>
+                    <Chip
+                      icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
+                      label={t('textSplit.atomicIntegrityWarning')}
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                      sx={{ fontSize: '11px', height: 22 }}
+                    />
+                  </Tooltip>
+                );
+              })()}
 
               <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0 }}>
                 {/* 展开/折叠 */}
