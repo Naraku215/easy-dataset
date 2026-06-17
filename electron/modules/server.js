@@ -3,6 +3,44 @@ const path = require('path');
 const fs = require('fs');
 const { dialog } = require('electron');
 
+function formatError(error) {
+  const parts = [];
+  const name = error && error.name ? error.name : 'Error';
+  const message = error && error.message ? error.message : String(error);
+
+  parts.push(`${name}: ${message}`);
+
+  if (error && error.stack) {
+    parts.push(error.stack);
+  }
+
+  if (error && error.cause) {
+    parts.push(`Cause: ${formatLogArg(error.cause)}`);
+  }
+
+  return parts.join('\n');
+}
+
+function formatLogArg(arg) {
+  if (arg instanceof Error) {
+    return formatError(arg);
+  }
+
+  if (typeof arg === 'object' && arg !== null) {
+    try {
+      return JSON.stringify(arg, null, 2);
+    } catch (error) {
+      return `[Unserializable Object: ${error.message}]`;
+    }
+  }
+
+  return String(arg);
+}
+
+function formatLogMessage(args) {
+  return args.map(formatLogArg).join(' ');
+}
+
 /**
  * 检查端口是否被占用
  * @param {number} port 端口号
@@ -45,7 +83,7 @@ async function startNextServer(port, app) {
 
   console.log = function () {
     const args = Array.from(arguments);
-    const logMessage = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg)).join(' ');
+    const logMessage = formatLogMessage(args);
 
     logStream.write(`[${new Date().toISOString()}] [LOG] ${logMessage}\n`);
     originalConsoleLog.apply(console, args);
@@ -53,7 +91,7 @@ async function startNextServer(port, app) {
 
   console.error = function () {
     const args = Array.from(arguments);
-    const logMessage = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg)).join(' ');
+    const logMessage = formatLogMessage(args);
 
     logStream.write(`[${new Date().toISOString()}] [ERROR] ${logMessage}\n`);
     originalConsoleError.apply(console, args);
@@ -80,7 +118,7 @@ async function startNextServer(port, app) {
           console.log(`[Next.js Info] ${info}`);
         },
         onError: error => {
-          console.error(`[Next.js Error] ${error}`);
+          console.error('[Next.js Error]', error);
         },
         onWarn: warn => {
           console.log(`[Next.js Warning] ${warn}`);
@@ -100,7 +138,7 @@ async function startNextServer(port, app) {
     return new Promise(resolve => {
       server.listen(port, err => {
         if (err) throw err;
-        console.log(`服务已启动，正在打开应用...`);
+        console.log('服务已启动，正在打开应用...');
         resolve(`http://localhost:${port}`);
       });
     });

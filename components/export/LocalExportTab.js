@@ -153,7 +153,10 @@ const LocalExportTab = ({
   }, []);
 
   const deferredBalanceConfig = useDeferredValue(balanceConfig);
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(deferredBalanceConfig.length / PAGE_SIZE)), [deferredBalanceConfig]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(deferredBalanceConfig.length / PAGE_SIZE)),
+    [deferredBalanceConfig]
+  );
 
   useEffect(() => {
     if (currentPage > totalPages) {
