@@ -1,7 +1,7 @@
 // 默认项目任务配置
 export const DEFAULT_SETTINGS = {
-  textSplitMinLength: 2500,
-  textSplitMaxLength: 4000,
+  textSplitMinLength: 800,
+  textSplitMaxLength: 2000,
   questionGenerationLength: 240,
   questionMaskRemovingProbability: 60,
   huggingfaceToken: '',
@@ -13,6 +13,8 @@ export const DEFAULT_SETTINGS = {
   multiTurnRounds: 3,
   multiTurnRoleA: '',
   multiTurnRoleB: '',
+  // 高级 Markdown 分块配置
+  advancedPreserveHeadings: true,
   // 测试集生成配置
   evalQuestionTypeRatios: {
     true_false: 1,

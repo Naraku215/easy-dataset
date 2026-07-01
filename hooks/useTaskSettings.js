@@ -34,6 +34,12 @@ export default function useTaskSettings(projectId) {
             ...data
           };
 
+          // 兼容旧值：2500/4000 → 800/2000
+          if (mergedSettings.textSplitMinLength === 2500 && mergedSettings.textSplitMaxLength === 4000) {
+            mergedSettings.textSplitMinLength = 800;
+            mergedSettings.textSplitMaxLength = 2000;
+          }
+
           // 确保 multiTurnRounds 是数字类型
           if (mergedSettings.multiTurnRounds !== undefined) {
             mergedSettings.multiTurnRounds = Number(mergedSettings.multiTurnRounds);
