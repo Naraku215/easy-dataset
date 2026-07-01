@@ -22,3 +22,4 @@ prisma/local-db/db.sqlite
 opencode.json
 merge-translations.js
 nul
+.qoder/
