@@ -224,11 +224,11 @@ export default function TaskSettings({ projectId }) {
                 {taskSettings.splitType === 'advanced-markdown' && (
                   <>
                     <Typography id="adv-min-length-slider" gutterBottom>
-                      {t('settings.minLength')}: {taskSettings.textSplitMinLength}
+                      {t('settings.minLength')}: {taskSettings.advancedTextSplitMinLength}
                     </Typography>
                     <Slider
-                      value={taskSettings.textSplitMinLength || 800}
-                      onChange={handleSliderChange('textSplitMinLength')}
+                      value={taskSettings.advancedTextSplitMinLength || 800}
+                      onChange={handleSliderChange('advancedTextSplitMinLength')}
                       aria-labelledby="adv-min-length-slider"
                       valueLabelDisplay="auto"
                       step={100}
@@ -238,11 +238,11 @@ export default function TaskSettings({ projectId }) {
                     />
 
                     <Typography id="adv-max-length-slider" gutterBottom sx={{ mt: 3 }}>
-                      {t('settings.maxLength')}: {taskSettings.textSplitMaxLength}
+                      {t('settings.maxLength')}: {taskSettings.advancedTextSplitMaxLength}
                     </Typography>
                     <Slider
-                      value={taskSettings.textSplitMaxLength || 2000}
-                      onChange={handleSliderChange('textSplitMaxLength')}
+                      value={taskSettings.advancedTextSplitMaxLength || 2000}
+                      onChange={handleSliderChange('advancedTextSplitMaxLength')}
                       aria-labelledby="adv-max-length-slider"
                       valueLabelDisplay="auto"
                       step={100}
