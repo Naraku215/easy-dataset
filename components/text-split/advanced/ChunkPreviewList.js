@@ -143,7 +143,7 @@ export default function ChunkPreviewList({
   const stripAutoContext = (content) => {
     if (!content) return content;
     return content
-      .replace(/^> 所属章节：[^\n]*(?:\n|$)/gm, '')
+      .replace(/^>\s*(?:Section:|所属章节：)[^\n]*(?:\n|$)/gm, '')
       .replace(/^[^\n]*（续 \d+\/\d+）[^\n]*(?:\n|$)/gm, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
@@ -237,12 +237,12 @@ export default function ChunkPreviewList({
     // 后半部分若无标题行且无已有引用上下文，自动补全标题上下文
     let secondContent = secondPart;
     const secondHasHeading = /^\s*#{1,6}\s+/.test(secondPart.trimStart());
-    const secondHasContext = /^\s*> 所属章节：/.test(secondPart.trimStart());
+    const secondHasContext = /^\s*>\s*(?:Section:|所属章节：)/.test(secondPart.trimStart());
     const pathArr = chunk.headingPath || [];
 
     if (!secondHasHeading && !secondHasContext && pathArr.length > 0) {
       const pathStr = pathArr.join(' › ');
-      secondContent = `> 所属章节：${pathStr}\n\n${secondPart}`;
+      secondContent = `> Section: ${pathStr}\n\n${secondPart}`;
     }
 
     const newChunks = [...chunks];

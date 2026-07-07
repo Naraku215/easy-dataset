@@ -26,6 +26,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { useTranslation } from 'react-i18next';
 import OutlineTreePanel from './OutlineTreePanel';
 import ChunkPreviewList from './ChunkPreviewList';
+import { scoreChunk } from '@/lib/file/split-markdown/advanced/scoring';
 
 /**
  * 高级 Markdown 分块对话框
@@ -154,7 +155,7 @@ export default function AdvancedChunkDialog({ open, onClose, projectId, fileId, 
       return {
         ...c,
         size: c.content.length,
-        qualityScore: scoreChunkClient(c.content, newHeadings, config.minLength, config.maxLength),
+        qualityScore: scoreChunk({ content: c.content, headings: newHeadings }, { minLength: config.minLength, maxLength: config.maxLength }),
         summary: regenerateSummary(c.content, newHeadings, c.headingPath)
       };
     });
@@ -449,110 +450,6 @@ function regenerateSummary(content, headings, headingPath) {
     return firstLine.replace(/^#{1,6}\s+/, '');
   }
   if (firstLine.length > 60) return firstLine.substring(0, 60) + '...';
-  return firstLine || '文本块';
+  return firstLine || 'Chunk';
 }
 
-// ─── 客户端质量评分（与 scoring.js 保持一致）─────────────────────────────────
-
-function _scoreLengthAdequacy(len, minLength, maxLength) {
-  if (len === 0) return 0;
-  if (len >= minLength && len <= maxLength) {
-    const segWidth = (maxLength - minLength) / 5;
-    const segIndex = Math.min(4, Math.floor((len - minLength) / segWidth));
-    switch (segIndex) {
-      case 2: return 20;
-      case 1: case 3: return 18;
-      case 0: case 4: return 15;
-      default: return 15;
-    }
-  }
-  if (len < minLength) return (len / minLength) * 15;
-  return (maxLength / len) * 15;
-}
-
-function _scoreHeadingPresence(content, headings) {
-  if (/^\s*#{1,6}\s+/.test(content)) return 20;
-  if (headings && headings.length > 0) return 15;
-  // 引用格式章节标记（拆分块补全标题上下文时添加）
-  if (/^\s*>\s*所属章节：/.test(content)) return 15;
-  if (/^#{1,6}\s+/m.test(content)) return 12;
-  return 0;
-}
-
-function _scoreSentenceCompleteness(content) {
-  const trimmed = content.trim();
-  if (!trimmed) return 0;
-  let score = 12;
-  const last = trimmed[trimmed.length - 1];
-  if ('.!?。！？'.includes(last)) score += 5;
-  if (trimmed.endsWith('```')) score += 5;
-  // 原子块结尾识别
-  const endsWithHtmlClose = /<\/[a-zA-Z][a-zA-Z0-9]*\s*>\s*$/.test(trimmed);
-  if (endsWithHtmlClose) score += 5;
-  const endsWithDisplayMath = /\$\$\s*$/.test(trimmed);
-  if (endsWithDisplayMath) score += 5;
-  const lastLine = trimmed.split('\n').pop().trim();
-  const endsWithTableRow = /^\|.+\|$/.test(lastLine);
-  if (endsWithTableRow) score += 5;
-  // 完整标点结尾（含语义等价的原子块结尾）
-  if (/[.!?。！？）\)」』\]】]$/.test(trimmed) || endsWithHtmlClose || endsWithDisplayMath || endsWithTableRow) score += 5;
-  // 连接词/指代词开头
-  const firstWord = trimmed.split(/\s+/)[0].toLowerCase();
-  const englishConnectives = ['and', 'but', 'however', 'therefore', 'moreover', 'furthermore', 'thus'];
-  const chineseConnectives = ['上述', '前述', '上列', '前者', '如下', '下列', '以下', '该', '此', '这些', '此项', '此法', '此外', '另外', '因而', '故', '进而', '继而', '其中', '后者', '见表', '参见', '详见', '见下文', '见下表'];
-  if (englishConnectives.includes(firstWord) || chineseConnectives.some(w => trimmed.startsWith(w))) score -= 3;
-  return Math.min(25, Math.max(0, score));
-}
-
-function _hasUnbalancedHtmlTable(content) {
-  const openCount = (content.match(/<table\b[^>]*>/gi) || []).length;
-  const closeCount = (content.match(/<\/table\s*>/gi) || []).length;
-  return openCount !== closeCount;
-}
-
-function _scoreAtomicIntegrity(content) {
-  let score = 20;
-  const fenceMatches = content.match(/^(`{3,}|~{3,})/gm);
-  if (fenceMatches && fenceMatches.length % 2 !== 0) score -= 10;
-  const ddCount = (content.match(/\$\$/g) || []).length;
-  if (ddCount % 2 !== 0) score -= 10;
-  if (_hasUnbalancedHtmlTable(content)) score -= 10;
-  const tableRows = content.match(/^\|.*\|$/gm);
-  if (tableRows && tableRows.length > 0) {
-    const hasSep = tableRows.some(r => /^\|[\s\-:|]+\|$/.test(r));
-    if (!hasSep && tableRows.length > 1) score -= 5;
-  }
-  return Math.max(0, score);
-}
-
-function _scoreContentVariety(content) {
-  let score = 5;
-  if (/^\|.*\|$/m.test(content)) score += 2;
-  if (/\$[^$]+\$/.test(content) || /\$\$[\s\S]+?\$\$/.test(content)) score += 2;
-  if (/^\s*[-*+]\s+/m.test(content) || /^\s*\d+\.\s+/m.test(content)) score += 2;
-  if (/^```/m.test(content)) score += 2;
-  const plain = content
-    .replace(/^\|.*\|$/gm, '').replace(/\$\$[\s\S]*?\$\$/g, '')
-    .replace(/```[\s\S]*?```/g, '').replace(/^\s*[-*+\d.]\s+.*/gm, '')
-    .replace(/^#{1,6}\s+.*/gm, '').trim();
-  if (plain.length > 100) score += 5;
-  return Math.min(15, score);
-}
-
-/**
- * 客户端质量评分（0-100）
- * @param {string} content - 分块内容
- * @param {string[]} headings - 标题数组
- * @param {number} minLength
- * @param {number} maxLength
- */
-function scoreChunkClient(content, headings, minLength = 800, maxLength = 2000) {
-  const len = (content || '').trim().length;
-  const total =
-    _scoreLengthAdequacy(len, minLength, maxLength) +
-    _scoreHeadingPresence(content, headings) +
-    _scoreSentenceCompleteness(content) +
-    _scoreAtomicIntegrity(content) +
-    _scoreContentVariety(content);
-  return Math.round(Math.min(100, Math.max(0, total)));
-}
